@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import "../globals.css";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Toaster } from 'sonner';
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 export default function RootLayout({  
   children,
 }: Readonly<{
-  children: React.ReactNode;  
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="en">
@@ -31,7 +31,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
       <main className="p-4">
+        <SidebarProvider>
+          <AppSidebar/>
+          <main>
+            <SidebarTrigger/>
             {children}
+          </main>
+        </SidebarProvider>
         <Toaster richColors position="top-center" />
         </main>
       </body>
