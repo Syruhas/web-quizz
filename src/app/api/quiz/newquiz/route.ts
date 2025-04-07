@@ -86,7 +86,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Transform questions to add ObjectIds
     const transformedQuestions: Question[] = quizData.questions.map((q) => ({
       _id: new ObjectId(),
       question: q.question,

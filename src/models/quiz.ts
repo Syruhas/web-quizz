@@ -5,7 +5,7 @@ export type QuizStatus = "draft" | "scheduled" | "active" | "closed";
 export interface Question {
   _id: ObjectId;
   question: string;
-  difficulty: number;
+  difficulty?: number;
   options: {
     _id: ObjectId;
     text: string;

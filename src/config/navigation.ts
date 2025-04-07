@@ -39,13 +39,13 @@ export const navigationItems: NavItem[] = [
     children: [
     {
         title: "Add Quiz",
-        url: "/quizzes/create",
+        url: "/quiz/create",
         icon: Plus,
         roles: ["teacher"],
     },
     {
         title: "Manage Quizzes",
-        url: "/quizzes/manage",
+        url: "/quiz/manage",
         icon: FileText,
         roles: ["teacher"],
     },
@@ -53,7 +53,7 @@ export const navigationItems: NavItem[] = [
 },
 {
     title: "My Quizzes",
-    url: "/quizzes",
+    url: "/quiz",
     icon: FileText,
     roles: ["student"],
 },
