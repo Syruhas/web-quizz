@@ -9,7 +9,11 @@ import { QuestionForm } from "@/components/question-form";
 import { toast } from "sonner";
 import { QuizFormQuestion, QuizFormData } from "@/types/quiz-form";
 
-export function NewQuizForm() { 
+interface NewQuizFormProps {
+  onSuccess: () => void;
+}
+
+export function NewQuizForm({ onSuccess }: NewQuizFormProps) { 
   const [questions, setQuestions] = useState<QuizFormQuestion[]>([]);
   const [quizTitle, setQuizTitle] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,7 +78,6 @@ export function NewQuizForm() {
         return;
       }
 
-      // Prepare quiz data
       const quizData: QuizFormData = {
         name: quizTitle,
         description: "",
@@ -103,9 +106,11 @@ export function NewQuizForm() {
       }
 
       toast.success("Quiz created successfully!");
-      // Optional: Reset form or redirect
-      setQuestions([]);
+  
+      setQuestions([]); 
       setQuizTitle("");
+      
+      onSuccess();
 
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to create quiz");

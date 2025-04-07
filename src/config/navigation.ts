@@ -34,22 +34,9 @@ export const navigationItems: NavItem[] = [
 },
 {
     title: "Quizzes",
+    url: "/quiz/manage",
     icon: FileText,
     roles: ["teacher"],
-    children: [
-    {
-        title: "Add Quiz",
-        url: "/quiz/create",
-        icon: Plus,
-        roles: ["teacher"],
-    },
-    {
-        title: "Manage Quizzes",
-        url: "/quiz/manage",
-        icon: FileText,
-        roles: ["teacher"],
-    },
-    ],
 },
 {
     title: "My Quizzes",
