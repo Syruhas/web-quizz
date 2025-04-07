@@ -1,33 +1,21 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Trash } from "lucide-react";
-
-interface Option {
-  id: string;
-  text: string;
-  isCorrect: boolean;
-}
-
-interface Question {
-  id: string;
-  question: string;
-  options: Option[];
-}
+import { QuizFormQuestion, QuizFormOption } from "@/types/quiz-form";
 
 interface QuestionFormProps {
-  question: Question;
-  onUpdate: (question: Question) => void;
+  question: QuizFormQuestion;
+  onUpdate: (question: QuizFormQuestion) => void;
   onRemove: () => void;
 }
 
 export function QuestionForm({ question, onUpdate, onRemove }: QuestionFormProps) {
   const addOption = () => {
-    const newOption: Option = {
+    const newOption: QuizFormOption = {
       id: crypto.randomUUID(),
       text: "",
       isCorrect: false,
@@ -38,7 +26,7 @@ export function QuestionForm({ question, onUpdate, onRemove }: QuestionFormProps
     });
   };
 
-  const updateOption = (optionId: string, updates: Partial<Option>) => {
+  const updateOption = (optionId: string, updates: Partial<QuizFormOption>) => {
     onUpdate({
       ...question,
       options: question.options.map((opt) =>
@@ -55,14 +43,12 @@ export function QuestionForm({ question, onUpdate, onRemove }: QuestionFormProps
   };
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
         <Input
           placeholder="Enter your question"
           value={question.question}
-          onChange={(e) =>
-            onUpdate({ ...question, question: e.target.value })
-          }
+          onChange={(e) => onUpdate({ ...question, question: e.target.value })}
           className="flex-1 mr-4"
         />
         <Button
@@ -76,10 +62,7 @@ export function QuestionForm({ question, onUpdate, onRemove }: QuestionFormProps
       </CardHeader>
       <CardContent className="space-y-4">
         {question.options.map((option) => (
-          <div
-            key={option.id}
-            className="flex items-center space-x-4"
-          >
+          <div key={option.id} className="flex items-center space-x-4">
             <Checkbox
               checked={option.isCorrect}
               onCheckedChange={(checked) =>
