@@ -18,10 +18,11 @@ export function GroupCard({ group, isCreateCard, onCreateClick }: GroupCardProps
   const { data: session } = useSession();
   const [showStudents, setShowStudents] = useState(false);
   const [students, setStudents] = useState<User[]>([]);
-  const [teacherName, setTeacherName] = useState<string>("");
+  const [teacherName, setTeacherName] = useState<string | null>(null);
   
   // Charger les détails des étudiants et du professeur si nécessaire
   useEffect(() => {
+    console.log("useEffect triggered", session?.user?.role);
     if (group) {
       // Si c'est le professeur qui visualise, récupérer les détails des étudiants
       if (session?.user?.role === "teacher" && 
@@ -43,7 +44,7 @@ export function GroupCard({ group, isCreateCard, onCreateClick }: GroupCardProps
     
     try {
       const studentIds = group.students.map(id => id.toString());
-      const response = await fetch(`/api/users?ids=${studentIds.join(',')}`);
+      const response = await fetch(`/api/groups/student?ids=${studentIds.join(',')}`);
       if (response.ok) {
         const data = await response.json();
         setStudents(data);
@@ -63,8 +64,12 @@ export function GroupCard({ group, isCreateCard, onCreateClick }: GroupCardProps
         const teacher = await response.json();
         setTeacherName(teacher.name);
       }
+      else{
+        setTeacherName("Unknown");
+      }
     } catch (error) {
       console.error("Error fetching teacher:", error);
+      setTeacherName("Unknown2");
     }
   };
   
@@ -102,7 +107,7 @@ export function GroupCard({ group, isCreateCard, onCreateClick }: GroupCardProps
         </CardHeader>
         <CardContent>
           <p className="text-sm text-gray-600">
-            Teacher: {teacherName || "Loading..."}
+            Teacher: {teacherName === null ? "Loading..." : teacherName || "Unknown"}
           </p>
         </CardContent>
       </Card>

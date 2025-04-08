@@ -7,7 +7,7 @@ export async function GET(
   context: { params: { id: string } }
 ) {
   try {
-    const studentId = context.params.id;
+    const {id: studentId } = await context.params;
 
     if (!studentId || !ObjectId.isValid(studentId)) {
       return NextResponse.json(

@@ -6,7 +6,7 @@ export async function GET(
     context: { params: { inviteCode: string } }
 ) {
     try {
-        const inviteCode = context.params.inviteCode;
+        const { inviteCode } = await context.params;
         const client = await clientPromise;
         const db = client.db("web-quizz");
 
