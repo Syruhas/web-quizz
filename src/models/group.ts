@@ -4,8 +4,8 @@ export interface Group {
   _id?: ObjectId;
   name: string;
   description?: string;
-  ownerId: ObjectId;
-  members: ObjectId[];
+  teacherId: ObjectId;
+  students: ObjectId[];
   inviteCode: string;
   createdAt: Date;
   updatedAt: Date;

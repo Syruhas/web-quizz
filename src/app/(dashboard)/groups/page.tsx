@@ -8,11 +8,8 @@ export default function GroupPage() {
     const [refreshFlag, setRefreshFlag] = useState(false);
 
     return (
-        <SessionProvider>
-        <div className="flex min-h-screen items-center justify-center">
-            
+            <div className='align-content'>
             <GroupList key={refreshFlag ? "1" : "0"}/>
-        </div>
-        </SessionProvider>
+            </div>  
     );
 }

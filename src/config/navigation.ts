@@ -48,7 +48,7 @@ export const navigationItems: NavItem[] = [
     title: "Groups",
     url: "/groups",
     icon: Users,
-    roles: ["teacher"],
+    roles: ["teacher","student"],
 },
 {
     title: "My Grades",
@@ -58,7 +58,7 @@ export const navigationItems: NavItem[] = [
 },
 {
     title: "Grade Overview",
-    url: "/grades/overview",
+    url: "/grades",
     icon: ChartColumn,
     roles: ["teacher"],
 },
