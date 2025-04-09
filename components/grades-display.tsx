@@ -8,13 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, ChevronDown, ChevronUp, CheckCircle, XCircle } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { QuestionDifficulty } from "@/models/quizz";
+
 import React from "react";
 
 interface QuestionDetail {
   id: string;
   text: string;
-  difficulty: QuestionDifficulty;
+  difficulty: number;
   points: number;
   type: "single" | "multiple";
   selectedAnswers: number[];
@@ -84,13 +84,13 @@ export function GradesDisplay() {
   };
 
   // Fonction pour obtenir le texte de difficulté
-  const getDifficultyText = (difficulty: QuestionDifficulty) => {
+  const getDifficultyText = (difficulty: number) => {
     switch (difficulty) {
-      case QuestionDifficulty.Easy:
+      case 1:
         return "Facile";
-      case QuestionDifficulty.Medium:
+      case 2:
         return "Moyen";
-      case QuestionDifficulty.Hard:
+      case 3:
         return "Difficile";
       default:
         return "Inconnu";

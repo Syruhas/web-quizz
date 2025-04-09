@@ -1,16 +1,14 @@
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
 
-export default async function Dashboard() {
+export default async function Quiz() {
   const session = await auth();
 
   return (
     <div>
       {session ? (
         <div>
-          <p>Welcome, {session.user?.name}</p>
-          <p>Email: {session.user?.email}</p>
-          <p>Role: {session.user?.role}</p>
+          <p>Welcome to your quiz page</p>
           {/* Only display necessary session information */}
         </div>
       ) : (
