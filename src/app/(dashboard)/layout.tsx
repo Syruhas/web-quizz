@@ -27,8 +27,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
           <main className="p-4">
             <SidebarProvider>
@@ -41,7 +39,5 @@ export default function RootLayout({
             <Toaster richColors position="top-center" />
           </main>
         </AuthProvider>
-      </body>
-    </html>
   );
 }
