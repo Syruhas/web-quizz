@@ -20,7 +20,6 @@ export interface Quiz {
   ownerId: ObjectId;
   questions: Question[];
   status: QuizStatus;
-  settings: QuizSettings;
   createdAt: Date;
   updatedAt: Date;
 }

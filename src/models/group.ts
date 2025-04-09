@@ -1,4 +1,5 @@
 import { ObjectId } from "mongodb";
+import { QuizSettings } from "@/src/models/quiz";
 
 export interface Group {
   _id?: ObjectId;
@@ -9,5 +10,8 @@ export interface Group {
   inviteCode: string;
   createdAt: Date;
   updatedAt: Date;
-  quizzes: ObjectId[];
+  quizzes: {
+    id:ObjectId;
+    settings: QuizSettings
+  }[]
 }

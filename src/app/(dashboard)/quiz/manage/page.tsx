@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, X } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NewQuizForm } from "@/components/new-quiz-form";
+import { QuizCard, QuizDetailView, QuizCardSkeleton, NewQuizCard} from '@/components/manage-quiz'
 import { Quiz } from "@/models/quiz";
 
 export default function ManageQuizzes() {
@@ -49,7 +49,6 @@ export default function ManageQuizzes() {
           Create New Quiz
         </h2>
         <NewQuizForm onSuccess={() => {
-            console.log("CREATED")
             setIsCreating(false);
             fetchQuizzes();
         }} />
@@ -101,73 +100,6 @@ export default function ManageQuizzes() {
           </>
         )}
       </div>
-    </div>
-  );
-}
-
-function QuizCard({ quiz, onClick }: { quiz: Quiz; onClick: () => void }) {
-    return (
-      <Card
-        className="p-6 hover:border-primary/50 transition-colors cursor-pointer"
-        onClick={onClick}
-      >
-        <div className="space-y-2">
-          <h3 className="font-semibold truncate">{quiz.name}</h3>
-          <p className="text-sm text-muted-foreground">
-            {quiz.questions.length} questions
-          </p>
-          <div className="flex items-center gap-2">
-            <span
-              className={`px-2 py-1 rounded-full text-xs ${
-                quiz.status === "draft"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : quiz.status === "active"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-gray-100 text-gray-800"
-              }`}
-            >
-              {quiz.status}
-            </span>
-          </div>
-        </div>
-      </Card>
-    );
-  }
-
-
-function NewQuizCard({ onClick }: { onClick: () => void }) {
-  return (
-    <Card 
-      className="p-6 border-dashed hover:border-primary/50 transition-colors cursor-pointer h-full flex items-center justify-center"
-      onClick={onClick}
-    >
-      <div className="text-center">
-        <Plus className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-        <span className="text-muted-foreground">Create New Quiz</span>
-      </div>
-    </Card>
-  );
-}
-
-
-function QuizCardSkeleton() {
-  return (
-    <Card className="p-6">
-      <div className="space-y-2">
-        <div className="h-6 bg-muted rounded w-3/4 animate-pulse" />
-        <div className="h-4 bg-muted rounded w-1/4 animate-pulse" />
-        <div className="h-6 bg-muted rounded w-1/3 animate-pulse" />
-      </div>
-    </Card>
-  );
-}
-
-function QuizDetailView({ quiz }: { quiz: Quiz }) {
-  return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold">{quiz.name}</h2>
-      <p>This is the quizz management section</p>
-      {/* TO DO */}
     </div>
   );
 }

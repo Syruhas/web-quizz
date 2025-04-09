@@ -103,16 +103,6 @@ export async function POST(req: NextRequest) {
       ownerId: new ObjectId(session.user.id),
       questions: transformedQuestions,
       status: "draft",
-      settings: {
-        shuffleQuestions: quizData.settings?.shuffleQuestions ?? false,
-        shuffleOptions: quizData.settings?.shuffleOptions ?? false,
-        showResults: quizData.settings?.showResults ?? true,
-        attemptsAllowed: quizData.settings?.attemptsAllowed ?? 1,
-        startDate: quizData.settings?.startDate ? new Date(quizData.settings.startDate) : undefined,
-        endDate: quizData.settings?.endDate ? new Date(quizData.settings.endDate) : undefined,
-        timeLimit: quizData.settings?.timeLimit,
-        passingScore: quizData.settings?.passingScore
-      },
       createdAt: new Date(),
       updatedAt: new Date()
     };

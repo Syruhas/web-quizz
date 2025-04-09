@@ -40,7 +40,7 @@ export function GroupCard({ group, isCreateCard, onCreateClick }: GroupCardProps
   
   // Récupérer les détails des étudiants
   const fetchStudents = async () => {
-    if (!group?.students || group.students.length === 0) return;
+    if (!group?.students || group.students.length === 0) return;  
     
     try {
       const studentIds = group.students.map(id => id.toString());

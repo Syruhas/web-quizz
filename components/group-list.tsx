@@ -78,13 +78,13 @@ export function GroupList() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {session?.user?.role === "teacher" && (
-            <GroupCard isCreateCard onCreateClick={handleCreateGroup} />
-          )}
-          
           {groups.map((group) => (
             <GroupCard key={group._id?.toString()} group={group} />
           ))}
+
+          {session?.user?.role === "teacher" && (
+            <GroupCard isCreateCard onCreateClick={handleCreateGroup} />
+          )}
           
           {groups.length === 0 && !showForm && (
             <p className="col-span-full text-center text-gray-500 py-8">

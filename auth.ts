@@ -42,13 +42,9 @@ export const {
           const client = await clientPromise;
           const db = client.db();
 
-          console.log(credentials.email);
-
           const user = await db
             .collection<DatabaseUser>("users")
             .findOne({ email: credentials.email });
-
-          console.log(user);
 
           if (!user) {
             throw new Error("No user found with this email");
