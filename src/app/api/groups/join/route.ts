@@ -47,6 +47,12 @@ export async function POST(req: NextRequest) {
             }
         );
 
+        const users = db.collection("users");
+        await users.updateOne(
+            {_id : studentObjectId},
+            {$push: {enrolledGroups : group._id as any}}
+        )
+
         return NextResponse.json(
             { message: "Successfully joined the group" },
             { status: 200 }
