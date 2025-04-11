@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/db";
 import { ObjectId } from "mongodb";
+import { QuizSettings } from '@/src/models/quiz';
 
 export async function GET() {
   try {
@@ -38,8 +39,11 @@ export async function GET() {
       .toArray();
       
     // Extraire tous les IDs de quiz de ces groupes
-    const quizIds = groups.flatMap(group => (group.quizzes || []).map((id: number) => new ObjectId(id)));
-    
+    const quizIds = groups.flatMap(group => (group.quizzes || []).map((quiz: Object) => new ObjectId(quiz.id)));
+    const quizzesSettings = groups.flatMap(group => (group.quizzes || []).map((quiz: {
+        id:ObjectId;
+        settings: QuizSettings
+      }) => quiz));
     // Récupérer les quiz correspondants qui sont actifs ou terminés (pas en brouillon)
     const quizzes = await db.collection("quiz")
       .find({ 
@@ -62,6 +66,8 @@ export async function GET() {
         attempt.quizId.toString() === quiz._id.toString()
       );
       
+      const quizSettings = quizzesSettings.find((q) => q.id.toString() === quiz._id.toString()).settings
+
       const attemptsCount = quizAttempts.length;
       const lastAttempt = quizAttempts.sort((a, b) => 
         new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
@@ -69,8 +75,8 @@ export async function GET() {
       
       // Vérifier si le quiz est disponible en fonction des dates
       const now = new Date();
-      const startDate = quiz.settings.startDate ? new Date(quiz.settings.startDate) : null;
-      const endDate = quiz.settings.endDate ? new Date(quiz.settings.endDate) : null;
+      const startDate = quizSettings.startDate ? new Date(quizSettings.startDate) : null;
+      const endDate = quizSettings.endDate ? new Date(quizSettings.endDate) : null;
       
       let availability = "available";
       if (startDate && now < startDate) {
@@ -80,7 +86,7 @@ export async function GET() {
       }
       
       // Vérifier si l'étudiant a atteint le nombre maximum de tentatives
-      const maxAttempts = quiz.settings.attemptsAllowed;
+      const maxAttempts = quizSettings.attemptsAllowed;
       const canAttempt = maxAttempts === 0 || attemptsCount < maxAttempts;
       
       return {
@@ -137,7 +143,7 @@ export async function POST(request: Request) {
       studentId: new ObjectId(userId)
     });
 
-    if (quiz.settings.attemptsAllowed !== 0 && existingAttempts >= quiz.settings.attemptsAllowed) {
+    if (quizSettings.attemptsAllowed !== 0 && existingAttempts >= quizSettings.attemptsAllowed) {
       return NextResponse.json({ error: "Nombre maximum de tentatives atteint" }, { status: 400 });
     }
 
