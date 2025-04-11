@@ -1,4 +1,5 @@
 // src/components/quiz-attempt.tsx
+"use client"
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Quiz, Question } from '@/models/quiz';
