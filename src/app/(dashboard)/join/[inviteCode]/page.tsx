@@ -85,7 +85,7 @@ function JoinGroupPageInner() {
             // setTimeout(() => {
             //     router.push("/dashboard");
             // }, 1500);
-            router.push("/dashboard");
+            router.push("/groups");
             
         } catch (error) {
             toast.error("Error joining group");

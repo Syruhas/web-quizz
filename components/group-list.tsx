@@ -22,7 +22,7 @@ export function GroupList() {
       if (session.user.role === "teacher") {
         endpoint = `/api/groups?teacherId=${session.user.id}`;
       } else if (session.user.role === "student") {
-        endpoint = `/api/groups/student/${session.user.id}`;
+        endpoint = `/api/groups/studentId/${session.user.id}`;
       }
       
       const response = await fetch(endpoint);
