@@ -1,19 +1,30 @@
-import { SessionProvider } from "next-auth/react";
-import { auth } from "@/auth";
+import { auth } from '@/auth';
+import { redirect } from "next/navigation";
+import { QuizDisplay } from '@/components/quiz-display';
+import { Geist, Geist_Mono } from "next/font/google";
 
-export default async function Quiz() {
-  const session = await auth();
 
-  return (
-    <div>
-      {session ? (
-        <div>
-          <p>Welcome to your quiz page</p>
-          {/* Only display necessary session information */}
-        </div>
-      ) : (
-        <p>Not signed in</p>
-      )}
+const geistSans = Geist({
+    variable: "--font-geist-sans",
+    subsets: ["latin"],
+  });
+  
+  const geistMono = Geist_Mono({
+    variable: "--font-geist-mono",
+    subsets: ["latin"],
+  });
+
+export default async function QuizPage() {
+    const session = await auth();
+
+    if (!session){
+      redirect("/login");
+    }
+
+    return (
+    <div className="container mx-auto py-0 px-0">
+      <h1 className="text-2xl font-bold mb-6">Mes Quiz</h1>
+      <QuizDisplay />
     </div>
-  );
+);
 }
