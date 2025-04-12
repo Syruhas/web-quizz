@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { NewQuizForm } from "@/components/new-quiz-form";
 import { QuizCard, QuizDetailView, QuizCardSkeleton, NewQuizCard} from '@/components/manage-quiz'
 import { Quiz } from "@/models/quiz";
+import { useSession } from 'next-auth/react';
 
 export default function ManageQuizzes() {
+  const { data: session, status } = useSession();
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -72,34 +74,36 @@ export default function ManageQuizzes() {
     );
   }
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Manage Quizzes</h1>
-      
-      {error && (
-        <div className="text-red-500 mb-4">
-          {error}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {isLoading ? (
-          Array(6)
-            .fill(0)
-            .map((_, i) => <QuizCardSkeleton key={i} />)
-        ) : (
-          <>
-            {quizzes.map((quiz) => (
-              <QuizCard
-                key={quiz._id?.toString()}
-                quiz={quiz}
-                onClick={() => setSelectedQuiz(quiz)}
-              />
-            ))}
-            <NewQuizCard onClick={() => setIsCreating(true)} />
-          </>
+  if (session?.user?.role === 'teacher') {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-6">Manage Quizzes</h1>
+        
+        {error && (
+          <div className="text-red-500 mb-4">
+            {error}
+          </div>
         )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {isLoading ? (
+            Array(6)
+              .fill(0)
+              .map((_, i) => <QuizCardSkeleton key={i} />)
+          ) : (
+            <>
+              {quizzes.map((quiz) => (
+                <QuizCard
+                  key={quiz._id?.toString()}
+                  quiz={quiz}
+                  onClick={() => setSelectedQuiz(quiz)}
+                />
+              ))}
+              <NewQuizCard onClick={() => setIsCreating(true)} />
+            </>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 }
