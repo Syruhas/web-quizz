@@ -53,20 +53,23 @@ export async function GET(
       
       const hasAccess = await db.collection("groups").findOne({
         _id: { $in: enrolledGroupIds },
-        quizzes: { $elemMatch: { $eq: new ObjectId(quizId) } }
+        quizzes: { $elemMatch: { id: new ObjectId(quizId) } }
       });
 
-      if (!hasAccess) {
+
+      if (!hasAccess) { 
         return NextResponse.json({ error: "Accès non autorisé à ce quiz" }, { status: 403 });
       }
-      
+
+      const quizSettings = hasAccess.quizzes.find((q) => q.id.toString() === quizId.id);
+      quiz.settings = quizSettings.settings;
       // Pour les étudiants, vérifier si le quiz est disponible selon les dates
       const now = new Date();
-      if (quiz.settings.startDate && new Date(quiz.settings.startDate) > now) {
+      if (quizSettings.startDate && new Date(quizSettings.startDate) > now) {
         return NextResponse.json({ error: "Ce quiz n'est pas encore disponible" }, { status: 403 });
       }
       
-      if (quiz.settings.endDate && new Date(quiz.settings.endDate) < now) {
+      if (quizSettings.endDate && new Date(quizSettings.endDate) < now) {
         return NextResponse.json({ error: "Ce quiz est terminé" }, { status: 403 });
       }
       
@@ -76,24 +79,20 @@ export async function GET(
         studentId: new ObjectId(userId)
       });
       
-      if (quiz.settings.attemptsAllowed !== 0 && attemptsCount >= quiz.settings.attemptsAllowed) {
+      if (quizSettings.attemptsAllowed !== 0 && attemptsCount >= quizSettings.attemptsAllowed) {
         return NextResponse.json({ error: "Nombre maximum de tentatives atteint" }, { status: 403 });
       }
-    }
-
-    // Si c'est un étudiant, mélanger les questions et les options si nécessaire
-    if (user.role === "student") {
       // Copier les questions pour ne pas modifier l'original
       let quizQuestions = [...quiz.questions];
       
       // Mélanger les questions si l'option est activée
-      if (quiz.settings.shuffleQuestions) {
+      if (quizSettings.shuffleQuestions) {
         quizQuestions = shuffleArray(quizQuestions);
       }
       
       // src/app/api/quiz/[id]/route.ts (suite)
       // Mélanger les options pour chaque question si l'option est activée
-      if (quiz.settings.shuffleOptions) {
+      if (quizSettings.shuffleOptions) {
         quizQuestions = quizQuestions.map(question => {
           return {
             ...question,
@@ -117,6 +116,43 @@ export async function GET(
       //   };
       // });
     }
+
+    // // Si c'est un étudiant, mélanger les questions et les options si nécessaire
+    // if (user.role === "student") {
+    //   // Copier les questions pour ne pas modifier l'original
+    //   let quizQuestions = [...quiz.questions];
+      
+    //   // Mélanger les questions si l'option est activée
+    //   if (quizSettings.shuffleQuestions) {
+    //     quizQuestions = shuffleArray(quizQuestions);
+    //   }
+      
+    //   // src/app/api/quiz/[id]/route.ts (suite)
+    //   // Mélanger les options pour chaque question si l'option est activée
+    //   if (quizSettings.shuffleOptions) {
+    //     quizQuestions = quizQuestions.map(question => {
+    //       return {
+    //         ...question,
+    //         options: shuffleArray([...question.options])
+    //       };
+    //     });
+    //   }
+      
+    //   // Remplacer les questions originales par les questions potentiellement mélangées
+    //   quiz.questions = quizQuestions;
+      
+    //   // Pour les étudiants, supprimer les informations sensibles (isCorrect)
+    //   // quiz.questions = quiz.questions.map(question => {
+    //   //   return {
+    //   //     ...question,
+    //   //     options: question.options.map(option => {
+    //   //       // Créer une copie sans la propriété isCorrect
+    //   //       const { isCorrect, ...safeOption } = option;
+    //   //       return safeOption;
+    //   //     })
+    //   //   };
+    //   // });
+    // }
 
     return NextResponse.json({ quiz });
   } catch (error) {

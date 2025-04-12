@@ -56,6 +56,20 @@ export async function GET(
     if (!quiz) {
       return NextResponse.json({ error: "Quiz non trouvé" }, { status: 404 });
     }
+
+    const group = await db.collection("groups").findOne({
+      students: new ObjectId(userId),
+      quizzes: {
+        $elemMatch: {
+          id: new ObjectId(quiz._id)
+        }
+      }
+    });
+
+
+    const settings = group?.quizzes.find((q) => q.id.toString() === quiz._id.toString()).settings
+    quiz.settings = settings
+     
     
     // Si c'est un étudiant qui consulte et que le quiz ne permet pas de voir les résultats détaillés,
     // ne pas renvoyer les options correctes

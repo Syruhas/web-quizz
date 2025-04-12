@@ -2,7 +2,7 @@
 "use client"
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Quiz } from '@/models/quiz';
+import { Quiz, QuizSettings } from '@/models/quiz';
 import { formatDistanceToNow, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -11,10 +11,12 @@ interface QuizWithAttemptInfo extends Quiz {
   lastAttempt?: any;
   availability: 'available' | 'notStarted' | 'ended';
   canAttempt: boolean;
+  quizSettings: QuizSettings;
 }
 
 export function QuizDisplay() {
   const [quizzes, setQuizzes] = useState<QuizWithAttemptInfo[]>([]);
+  const [settings, setSettings] = useState<QuizSettings[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -102,26 +104,26 @@ export function QuizDisplay() {
                   <span className="font-medium">Questions:</span> {quiz.questions.length}
                 </p>
                 
-                {quiz.settings.timeLimit && (
+                {quiz.quizSettings.timeLimit && (
                   <p>
-                    <span className="font-medium">Temps limite:</span> {quiz.settings.timeLimit} minutes
+                    <span className="font-medium">Temps limite:</span> {quiz.quizSettings.timeLimit} minutes
                   </p>
                 )}
                 
                 <p>
                   <span className="font-medium">Tentatives:</span> {quiz.attemptsCount} / 
-                  {quiz.settings.attemptsAllowed === 0 ? '∞' : quiz.settings.attemptsAllowed}
+                  {quiz.quizSettings.attemptsAllowed === 0 ? '∞' : quiz.quizSettings.attemptsAllowed}
                 </p>
                 
-                {quiz.settings.startDate && (
+                {quiz.quizSettings.startDate && (
                   <p>
-                    <span className="font-medium">Début:</span> {formatDate(quiz.settings.startDate)}
+                    <span className="font-medium">Début:</span> {formatDate(quiz.quizSettings.startDate)}
                   </p>
                 )}
                 
-                {quiz.settings.endDate && (
+                {quiz.quizSettings.endDate && (
                   <p>
-                    <span className="font-medium">Fin:</span> {formatDate(quiz.settings.endDate)}
+                    <span className="font-medium">Fin:</span> {formatDate(quiz.quizSettings.endDate)}
                   </p>
                 )}
                 

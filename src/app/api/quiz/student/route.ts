@@ -48,7 +48,7 @@ export async function GET() {
     const quizzes = await db.collection("quiz")
       .find({ 
         _id: { $in: quizIds },
-        status: { $in: ["scheduled", "active", "closed"] }
+        status: { $in: ["draft", "scheduled", "active", "closed"] }
       })
       .toArray();
       
@@ -94,10 +94,10 @@ export async function GET() {
         attemptsCount,
         lastAttempt,
         availability,
-        canAttempt
+        canAttempt,
+        quizSettings,
       };
     });
-    
     return NextResponse.json({ quizzes: quizzesWithAttemptInfo });
   } catch (error) {
     console.error("Erreur lors de la récupération des quiz:", error);
@@ -143,7 +143,22 @@ export async function POST(request: Request) {
       studentId: new ObjectId(userId)
     });
 
-    if (quizSettings.attemptsAllowed !== 0 && existingAttempts >= quizSettings.attemptsAllowed) {
+    const group = await db.collection("groups").findOne({
+      students: new ObjectId(userId),
+      quizzes: {
+        $elemMatch: {
+          id: new ObjectId(quiz._id)
+        }
+      }
+    });
+
+    console.log(group)
+
+
+    const settings = group?.quizzes.find((q) => q.id.toString() === quiz._id.toString()).settings
+    quiz.settings = settings
+
+    if (quiz.settings.attemptsAllowed !== 0 && existingAttempts >= quiz.settings.attemptsAllowed) {
       return NextResponse.json({ error: "Nombre maximum de tentatives atteint" }, { status: 400 });
     }
 
