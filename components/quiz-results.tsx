@@ -2,6 +2,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 interface QuizResultsProps {
   attemptId: string;
@@ -42,6 +43,7 @@ interface QuizResultsData {
 }
 
 export default function QuizResults({ attemptId }: QuizResultsProps) {
+  const { data: session, status } = useSession();
   const [resultsData, setResultsData] = useState<QuizResultsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -247,24 +249,26 @@ export default function QuizResults({ attemptId }: QuizResultsProps) {
             </div>
           )}
         </div>
+        {session?.user?.role === 'student' ? (
         
-        <div className="bg-gray-50 p-4 border-t">
-          <div className="flex justify-between">
-            <button
-              onClick={() => router.push('/quiz')}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded"
-            >
-              Retour aux quiz
-            </button>
-            
-            <button
-              onClick={() => router.push(`/quiz/attempt/${quiz._id}`)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
-            >
-              Retenter le quiz
-            </button>
+          <div className="bg-gray-50 p-4 border-t">
+            <div className="flex justify-between">
+              <button
+                onClick={() => router.push('/quiz')}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded"
+              >
+                Retour aux quiz
+              </button>
+              
+              <button
+                onClick={() => router.push(`/quiz/attempt/${quiz._id}`)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+              >
+                Retenter le quiz
+              </button>
+            </div>
           </div>
-        </div>
+        ) : null }
       </div>
     </div>
   );

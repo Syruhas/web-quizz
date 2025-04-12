@@ -111,7 +111,7 @@ export function QuizDisplay() {
                 )}
                 
                 <p>
-                  <span className="font-medium">Tentatives:</span> {quiz.attemptsCount} / 
+                  <span className="font-medium">Tentatives:</span> {quiz.attemptsCount}/ 
                   {quiz.quizSettings.attemptsAllowed === 0 ? '∞' : quiz.quizSettings.attemptsAllowed}
                 </p>
                 

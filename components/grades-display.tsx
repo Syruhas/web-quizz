@@ -1,281 +1,469 @@
-"use client";
+// src/components/grades-display.tsx
+'use client';
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, ChevronDown, ChevronUp, CheckCircle, XCircle } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import React from "react";
+import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { ArrowUpDown, Search, Download, User, Users, BookOpen } from 'lucide-react';
+import { QuizAttempt, Quiz } from '@/models/quiz';
+import { User as UserModel } from '@/models/user';
 
-interface QuestionDetail {
-  id: string;
-  text: string;
-  difficulty: number;
-  points: number;
-  type: "single" | "multiple";
-  selectedAnswers: number[];
-  correctAnswers: number[];
-  options: string[];
-  isCorrect: boolean;
-  earnedPoints: number;
-}
-
-interface GradeWithDetails {
-  id: string;
+interface StudentGrade {
+  _id: string;
+  studentId: string;
+  studentName: string;
   quizId: string;
   quizName: string;
   score: number;
-  totalPossiblePoints: number;
-  startedAt: string;
-  submittedAt: string;
-  questionDetails: QuestionDetail[];
+  completedAt: string;
+  attemptId: string;
+}
+
+interface GroupGrades {
+  groupId: string;
+  groupName: string;
+  students: {
+    studentId: string;
+    studentName: string;
+    grades: StudentGrade[];
+  }[];
 }
 
 export function GradesDisplay() {
-  const [grades, setGrades] = useState<GradeWithDetails[]>([]);
+  const { data: session, status } = useSession();
+  const [grades, setGrades] = useState<StudentGrade[]>([]);
+  const [groupGrades, setGroupGrades] = useState<GroupGrades[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedQuiz, setExpandedQuiz] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof StudentGrade;
+    direction: 'asc' | 'desc';
+  }>({ key: 'completedAt', direction: 'desc' });
+  const [selectedGroup, setSelectedGroup] = useState<string | 'all'>('all');
 
   useEffect(() => {
-    const fetchGrades = async () => {
+    async function fetchGrades() {
       try {
-        const response = await fetch("/api/grades");
+        setLoading(true);
+        const response = await fetch('/api/grades');
         
         if (!response.ok) {
-          throw new Error("Erreur lors de la récupération des notes");
+          throw new Error('Échec du chargement des notes');
         }
         
         const data = await response.json();
-        setGrades(data);
+        
+        if (session?.user?.role === 'student') {
+          setGrades(data.grades);
+        } else {
+          setGrades(data.allGrades || []);
+          setGroupGrades(data.groupGrades || []);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Une erreur est survenue");
+        console.error('Erreur lors du chargement des notes:', err);
+        setError('Impossible de charger les notes. Veuillez réessayer plus tard.');
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchGrades();
-  }, []);
-
-  // Fonction pour calculer le niveau de la note
-  const getScoreLevel = (score: number, totalPossible: number) => {
-    const percentage = (score / totalPossible) * 100;
-    if (percentage >= 75) return { label: "Excellent", color: "bg-green-100 text-green-800" };
-    if (percentage >= 60) return { label: "Bien", color: "bg-blue-100 text-blue-800" };
-    if (percentage >= 40) return { label: "Moyen", color: "bg-yellow-100 text-yellow-800" };
-    return { label: "À améliorer", color: "bg-red-100 text-red-800" };
-  };
-
-  // Fonction pour formater la date
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return new Intl.DateTimeFormat("fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    }).format(date);
-  };
-
-  // Fonction pour obtenir le texte de difficulté
-  const getDifficultyText = (difficulty: number) => {
-    switch (difficulty) {
-      case 1:
-        return "Facile";
-      case 2:
-        return "Moyen";
-      case 3:
-        return "Difficile";
-      default:
-        return "Inconnu";
     }
-  };
-
-  const toggleExpandQuiz = (quizId: string) => {
-    if (expandedQuiz === quizId) {
-      setExpandedQuiz(null);
-    } else {
-      setExpandedQuiz(quizId);
+    
+    if (status === 'authenticated') {
+      fetchGrades();
     }
+  }, [session, status]);
+
+  // Fonction de tri
+  const sortData = (key: keyof StudentGrade) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    
+    setSortConfig({ key, direction });
   };
 
-  if (loading) {
+  // Fonction pour filtrer les données
+  const filteredGrades = grades.filter(grade => {
+    const searchLower = searchTerm.toLowerCase();
     return (
-      <div className="space-y-4">
-        <CardHeader>
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-full mt-2" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-64 w-full" />
-        </CardContent>
+      grade.quizName.toLowerCase().includes(searchLower) ||
+      grade.studentName.toLowerCase().includes(searchLower)
+    );
+  });
+
+  // Fonction pour trier les données
+  const sortedGrades = [...filteredGrades].sort((a, b) => {
+    if (a[sortConfig.key] < b[sortConfig.key]) {
+      return sortConfig.direction === 'asc' ? -1 : 1;
+    }
+    if (a[sortConfig.key] > b[sortConfig.key]) {
+      return sortConfig.direction === 'asc' ? 1 : -1;
+    }
+    return 0;
+  });
+
+  // Exporter au format CSV
+  const exportToCSV = () => {
+    const headers = ['Étudiant', 'Quiz', 'Score', 'Date de soumission'];
+    const dataRows = sortedGrades.map(grade => [
+      grade.studentName,
+      grade.quizName,
+      `${grade.score}%`,
+      new Date(grade.completedAt).toLocaleDateString()
+    ]);
+    
+    const csvContent = [
+      headers.join(','),
+      ...dataRows.map(row => row.join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'notes.csv');
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  if (status === 'loading' || loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
+            <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
+              Chargement...
+            </span>
+          </div>
+          <p className="mt-2 text-gray-600">Chargement des notes...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Erreur</AlertTitle>
-        <AlertDescription>
-          {error}
-        </AlertDescription>
-      </Alert>
+      <div className="p-4 border border-red-300 bg-red-50 rounded-md">
+        <p className="text-red-800">{error}</p>
+      </div>
     );
   }
 
-  // Calcul du score moyen
-  const calculateAverageScore = () => {
-    if (grades.length === 0) return "N/A";
-    
-    const totalScore = grades.reduce((acc, grade) => acc + grade.score, 0);
-    const totalPossible = grades.reduce((acc, grade) => acc + grade.totalPossiblePoints, 0);
-    
-    return `${totalScore}/${totalPossible} (${Math.round((totalScore / totalPossible) * 100)}%)`;
-  };
-
-  return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Mes notes</CardTitle>
-        <CardDescription>
-          Visualisez vos résultats pour tous les quizz que vous avez complétés.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+  if (session?.user?.role === 'student') {
+    // Vue étudiant
+    return (
+      <div className="container mx-auto p-4">
+        <h1 className="text-2xl font-bold mb-6">Mes notes</h1>
+        
         {grades.length === 0 ? (
-          <div className="flex justify-center items-center h-40 text-gray-500">
-            Vous n'avez pas encore complété de quizz.
+          <div className="text-center py-8">
+            <BookOpen className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <p className="text-lg text-gray-600">Vous n'avez pas encore de notes.</p>
           </div>
         ) : (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-gray-500">
-                {grades.length} {grades.length > 1 ? "quizz complétés" : "quizz complété"}
-              </div>
-              <div className="text-sm font-medium">
-                Moyenne générale: {calculateAverageScore()}
+          <>
+            <div className="mb-4 flex justify-between items-center">
+              <div className="relative w-full max-w-md">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Rechercher un quiz..."
+                  className="pl-10 pr-4 py-2 border rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
             </div>
             
-            <Table>
-              <TableCaption>Liste des notes obtenues aux quizz</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Quiz</TableHead>
-                  <TableHead>Note</TableHead>
-                  <TableHead>Niveau</TableHead>
-                  <TableHead>Date de soumission</TableHead>
-                  <TableHead className="text-right">Détails</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {grades.map((grade) => {
-                  const scoreLevel = getScoreLevel(grade.score, grade.totalPossiblePoints);
-                  const isExpanded = expandedQuiz === grade.id;
-
-                  return (
-                    <React.Fragment key={grade.id}>
-                      <TableRow 
-                        className={isExpanded ? "border-b-0" : ""}
-                        style={{ cursor: "pointer" }}
-                        onClick={() => toggleExpandQuiz(grade.id)}
-                      >
-                        <TableCell className="font-medium">{grade.quizName}</TableCell>
-                        <TableCell>{grade.score}/{grade.totalPossiblePoints}</TableCell>
-                        <TableCell>
-                          <Badge className={scoreLevel.color}>{scoreLevel.label}</Badge>
-                        </TableCell>
-                        <TableCell>{formatDate(grade.submittedAt)}</TableCell>
-                        <TableCell className="text-right">
-                          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                        </TableCell>
-                      </TableRow>
-
-                      {isExpanded && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="p-0">
-                            <div className="bg-gray-50 p-4">
-                              <h4 className="font-medium mb-2">Détail des questions</h4>
-                              
-                              <div className="grid gap-3">
-                                {grade.questionDetails.map((question, index) => (
-                                  <div key={question.id.toString()} className="bg-white p-3 rounded border">
-                                    <div className="flex justify-between items-start mb-2">
-                                      <div className="flex-1">
-                                        <div className="flex items-center gap-2">
-                                          <span className="font-medium">Question {index + 1}:</span>
-                                          <Badge variant={question.isCorrect ? "default" : "destructive"}>
-                                            {question.isCorrect ? 
-                                              <CheckCircle className="mr-1 h-3 w-3" /> : 
-                                              <XCircle className="mr-1 h-3 w-3" />
-                                            }
-                                            {question.earnedPoints}/{question.points} pts
-                                          </Badge>
-                                          <Badge variant="outline">
-                                            {getDifficultyText(question.difficulty)}
-                                          </Badge>
-                                          <Badge variant="outline">
-                                            {question.type === "single" ? "Choix unique" : "Choix multiple"}
-                                          </Badge>
-                                        </div>
-                                        <p className="mt-1">{question.text}</p>
-                                      </div>
-                                    </div>
-                                    
-                                    <div className="mt-2 space-y-1.5">
-                                      {question.options.map((option, optIndex) => {
-                                        const isSelected = question.selectedAnswers.includes(optIndex);
-                                        const isCorrect = question.correctAnswers.includes(optIndex);
-                                        
-                                        let bgColor = "";
-                                        if (isSelected && isCorrect) bgColor = "bg-green-50";
-                                        else if (isSelected && !isCorrect) bgColor = "bg-red-50";
-                                        else if (!isSelected && isCorrect) bgColor = "bg-blue-50";
-                                        
-                                        return (
-                                          <div 
-                                            key={optIndex} 
-                                            className={`flex items-center p-2 rounded ${bgColor}`}
-                                          >
-                                            {isSelected ? 
-                                              (isCorrect ? 
-                                                <CheckCircle className="h-4 w-4 text-green-600 mr-2" /> : 
-                                                <XCircle className="h-4 w-4 text-red-600 mr-2" />
-                                              ) : 
-                                              (isCorrect ?
-                                                <CheckCircle className="h-4 w-4 text-blue-600 mr-2 opacity-50" /> :
-                                                <span className="w-4 h-4 mr-2"></span>
-                                              )
-                                            }
-                                            <span className={isSelected ? "font-medium" : ""}>
-                                              {option}
-                                            </span>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <div className="bg-white shadow-md rounded-lg overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                      onClick={() => sortData('quizName')}
+                    >
+                      <div className="flex items-center">
+                        Quiz
+                        <ArrowUpDown className="ml-1 h-4 w-4" />
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                      onClick={() => sortData('score')}
+                    >
+                      <div className="flex items-center">
+                        Score
+                        <ArrowUpDown className="ml-1 h-4 w-4" />
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                      onClick={() => sortData('completedAt')}
+                    >
+                      <div className="flex items-center">
+                        Date
+                        <ArrowUpDown className="ml-1 h-4 w-4" />
+                      </div>
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {sortedGrades.map((grade) => (
+                    <tr key={grade.attemptId} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{grade.quizName}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className={`text-sm font-medium ${
+                          grade.score >= 80 ? 'text-green-600' : 
+                          grade.score >= 60 ? 'text-yellow-600' : 
+                          'text-red-600'
+                        }`}>
+                          {grade.score}%
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {new Date(grade.completedAt).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <a 
+                          href={`/quiz/results/${grade.attemptId}`} 
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Voir les détails
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  } else {
+    // Vue enseignant
+    return (
+      <div className="container mx-auto p-4">
+        <h1 className="text-2xl font-bold mb-6">Notes des étudiants</h1>
+        
+        <div className="mb-4 flex flex-wrap gap-4 justify-between items-center">
+          <div className="flex-1 min-w-[250px]">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Rechercher un étudiant ou un quiz..."
+                className="pl-10 pr-4 py-2 border rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-2">
+            <select
+              className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={selectedGroup}
+              onChange={(e) => setSelectedGroup(e.target.value)}
+            >
+              <option value="all">Tous les groupes</option>
+              {groupGrades.map((group) => (
+                <option key={group.groupId} value={group.groupId}>
+                  {group.groupName}
+                </option>
+              ))}
+            </select>
+            
+            <button
+              onClick={exportToCSV}
+              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+            >
+              <Download className="h-5 w-5 mr-2" />
+              Exporter CSV
+            </button>
+          </div>
+        </div>
+        
+        {grades.length === 0 ? (
+          <div className="text-center py-8">
+            <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <p className="text-lg text-gray-600">Aucune note n'est disponible pour le moment.</p>
+          </div>
+        ) : (
+          <div className="bg-white shadow-md rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    onClick={() => sortData('studentName')}
+                  >
+                    <div className="flex items-center">
+                      Étudiant
+                      <ArrowUpDown className="ml-1 h-4 w-4" />
+                    </div>
+                  </th>
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    onClick={() => sortData('quizName')}
+                  >
+                    <div className="flex items-center">
+                      Quiz
+                      <ArrowUpDown className="ml-1 h-4 w-4" />
+                    </div>
+                  </th>
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    onClick={() => sortData('score')}
+                  >
+                    <div className="flex items-center">
+                      Score
+                      <ArrowUpDown className="ml-1 h-4 w-4" />
+                    </div>
+                  </th>
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                    onClick={() => sortData('completedAt')}
+                  >
+                    <div className="flex items-center">
+                      Date
+                      <ArrowUpDown className="ml-1 h-4 w-4" />
+                    </div>
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {sortedGrades
+                  .filter(grade => selectedGroup === 'all' || 
+                    groupGrades.find(g => g.groupId === selectedGroup)?.students
+                      .some(s => s.studentId === grade.studentId))
+                  .map((grade) => (
+                    <tr key={grade.attemptId} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <User className="h-5 w-5 text-gray-400 mr-2" />
+                          <div className="text-sm font-medium text-gray-900">{grade.studentName}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{grade.quizName}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          grade.score >= 80 ? 'bg-green-100 text-green-800' : 
+                          grade.score >= 60 ? 'bg-yellow-100 text-yellow-800' : 
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {grade.score}%
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {new Date(grade.completedAt).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <a 
+                          href={`/quiz/results/${grade.attemptId}`} 
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Voir les détails
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
           </div>
         )}
-      </CardContent>
-    </Card>
-  );
+        
+        {/* Section d'analyse par groupe si un groupe est sélectionné */}
+        {selectedGroup !== 'all' && (
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold mb-4">
+              Analyse du groupe: {groupGrades.find(g => g.groupId === selectedGroup)?.groupName}
+            </h2>
+            
+            {/* Statistiques du groupe */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              {/* Score moyen */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-sm font-medium text-gray-500 mb-1">Score moyen</h3>
+                <p className="text-3xl font-bold">
+                  {sortedGrades
+                    .filter(grade => 
+                      groupGrades.find(g => g.groupId === selectedGroup)?.students
+                        .some(s => s.studentId === grade.studentId)
+                    )
+                    .reduce((sum, grade) => sum + grade.score, 0) / 
+                      Math.max(
+                        1, 
+                        sortedGrades.filter(grade => 
+                          groupGrades.find(g => g.groupId === selectedGroup)?.students
+                            .some(s => s.studentId === grade.studentId)
+                        ).length
+                      )
+                    }%
+                </p>
+              </div>
+              
+              {/* Meilleur score */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-sm font-medium text-gray-500 mb-1">Meilleur score</h3>
+                <p className="text-3xl font-bold text-green-600">
+                  {Math.max(
+                    0,
+                    ...sortedGrades
+                      .filter(grade => 
+                        groupGrades.find(g => g.groupId === selectedGroup)?.students
+                          .some(s => s.studentId === grade.studentId)
+                      )
+                      .map(grade => grade.score)
+                  )}%
+                </p>
+              </div>
+              
+              {/* Nombre de quiz complétés */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-sm font-medium text-gray-500 mb-1">Quiz complétés</h3>
+                <p className="text-3xl font-bold text-blue-600">
+                  {sortedGrades.filter(grade => 
+                    groupGrades.find(g => g.groupId === selectedGroup)?.students
+                      .some(s => s.studentId === grade.studentId)
+                  ).length}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 }

@@ -57,7 +57,7 @@ export async function GET(
       return NextResponse.json({ error: "Quiz non trouvé" }, { status: 404 });
     }
 
-    const group = await db.collection("groups").findOne({
+    var group = await db.collection("groups").findOne({
       students: new ObjectId(userId),
       quizzes: {
         $elemMatch: {
@@ -66,6 +66,16 @@ export async function GET(
       }
     });
 
+    if(!group) {
+      group = await db.collection("groups").findOne({
+        teacherId: new ObjectId(userId),
+        quizzes: {
+          $elemMatch: {
+            id: new ObjectId(quiz._id)
+          }
+        }
+      });
+    }
 
     const settings = group?.quizzes.find((q) => q.id.toString() === quiz._id.toString()).settings
     quiz.settings = settings
