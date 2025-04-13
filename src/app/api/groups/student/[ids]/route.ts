@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     const users = db.collection<User>("users");
 
     const userNames = await users
-      .find(git a
+      .find(
         { _id: { $in: objectIds } },
         { projection: { name: 1, _id: 1 } }
       )

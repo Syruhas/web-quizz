@@ -19,6 +19,13 @@ export async function GET(
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
+    if (!quizId) {
+      return NextResponse.json(
+        { error: "Missing id parameter" },
+        { status: 400 }
+      );
+    }
+
     const userId = session.user.id;
     
     // Connexion à MongoDB

@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import QuizAttempt from '@/components/quiz-attempt';
 import { useParams } from "next/navigation";
 
-export default async function QuizAttemptPage({ params }: { params: { id: string } }) {
+export default function QuizAttemptPage({ params }: { params: { id: string } }) {
   const { id } = useParams<{ id: string }>();
   return (
     <div className="container mx-auto py-8">
