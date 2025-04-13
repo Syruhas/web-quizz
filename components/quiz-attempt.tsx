@@ -2,7 +2,7 @@
 "use client"
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Quiz, Question } from '@/models/quiz';
+import { Quiz, Question, QuizSettings} from '@/models/quiz';
 import { ObjectId } from 'mongodb';
 
 interface QuizAttemptProps {
@@ -10,6 +10,7 @@ interface QuizAttemptProps {
 }
 
 interface QuizWithResponseTracking extends Quiz {
+  settings : QuizSettings,
   currentQuestionIndex: number;
   responses: {
     questionId: string;
@@ -45,7 +46,7 @@ export default function QuizAttempt({ quizId }: QuizAttemptProps) {
           responses: data.quiz.questions.map((q: Question) => ({
             questionId: q._id.toString(),
             selectedOptions: []
-          }))
+          })),
         };
         
         // Si le quiz a un temps limite, configurer le timer

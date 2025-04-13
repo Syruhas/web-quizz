@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
     }
 
     // assignement to group
-    const existingAssignment = await db.collection("groups").findOne({
+    /* const existingAssignment = await db.collection("groups").findOne({
       _id: groupObjectId,
       "quizzes.id": quizObjectId
     });
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
         { error: "Quiz is already assigned to this group" },
         { status: 400 }
       );
-    }
+    }*/
 
     // settings
     if (

@@ -9,7 +9,7 @@ import {
 
 interface BaseNavItem {
     title: string;
-    icon: any; // You might want to use a more specific type for icons
+    icon: any;
     roles: ("teacher" | "student")[];
 }
 

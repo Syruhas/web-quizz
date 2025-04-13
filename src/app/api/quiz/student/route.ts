@@ -3,7 +3,7 @@ import { auth } from '@/auth';
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/db";
 import { ObjectId } from "mongodb";
-import { QuizSettings } from '@/src/models/quiz';
+import { QuizSettings, Quiz } from '@/src/models/quiz';
 
 export async function GET() {
   try {
@@ -37,9 +37,11 @@ export async function GET() {
     const groups = await db.collection("groups")
       .find({ _id: { $in: enrolledGroupIds } })
       .toArray();
+
+    console.log(groups)
       
     // Extraire tous les IDs de quiz de ces groupes
-    const quizIds = groups.flatMap(group => (group.quizzes || []).map((quiz: Object) => new ObjectId(quiz.id)));
+    const quizIds = groups.flatMap(group => (group.quizzes || []).map((quiz: Quiz) => new ObjectId(quiz._id)));
     const quizzesSettings = groups.flatMap(group => (group.quizzes || []).map((quiz: {
         id:ObjectId;
         settings: QuizSettings
@@ -155,7 +157,7 @@ export async function POST(request: Request) {
     console.log(group)
 
 
-    const settings = group?.quizzes.find((q) => q.id.toString() === quiz._id.toString()).settings
+    const settings = group?.quizzes.find((q: { id: { toString: () => string; }; }) => q.id.toString() === quiz._id.toString()).settings
     quiz.settings = settings
 
     if (quiz.settings.attemptsAllowed !== 0 && existingAttempts >= quiz.settings.attemptsAllowed) {
@@ -167,7 +169,7 @@ export async function POST(request: Request) {
     const totalQuestions = quiz.questions.length;
     
     answers.forEach((answer: { questionId: string; selectedOptions: string[] }) => {
-      const question = quiz.questions.find(q => 
+      const question = quiz.questions.find((q: { _id: { toString: () => string; }; }) => 
         q._id.toString() === answer.questionId
       );
       
@@ -175,13 +177,13 @@ export async function POST(request: Request) {
         // Une question est correcte si toutes les options correctes sont sélectionnées
         // et aucune option incorrecte n'est sélectionnée
         const correctOptionIds = question.options
-          .filter(opt => opt.isCorrect)
-          .map(opt => opt._id.toString());
+          .filter((opt: { isCorrect: any; }) => opt.isCorrect)
+          .map((opt: { _id: { toString: () => any; }; }) => opt._id.toString());
           
         const selectedOptionIds = answer.selectedOptions;
         
         // Vérifier si les options sélectionnées correspondent exactement aux options correctes
-        const allCorrectOptionsSelected = correctOptionIds.every(id => 
+        const allCorrectOptionsSelected = correctOptionIds.every((id: string) => 
           selectedOptionIds.includes(id)
         );
         
