@@ -33,7 +33,7 @@ function JoinGroupPageInner() {
 
         const fetchGroup = async () => {
             try {
-                const res = await fetch(`/api/groups/${inviteCode}`);
+                const res = await fetch(`/api/groups/invite?inviteCode=${inviteCode}`);
                 
                 if (!res.ok) {
                     toast.error("Failed to fetch group");
