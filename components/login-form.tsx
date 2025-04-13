@@ -28,6 +28,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
     e.preventDefault();
     setIsLoading(true);
 
+    const referer = document.referrer;
+    const isComingFromJoinPage = referer.includes('/join');
+
     try {
       const result = await signIn("credentials", {
         email: formData.email,
@@ -44,7 +47,14 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
 
       if (result?.ok) {
         toast.success("Logged in successfully");
-        router.push("/dashboard");
+
+        if(isComingFromJoinPage){
+          const callbackUrl = referer.split("?")[0];
+          router.push(callbackUrl);
+        }
+        else{
+          router.push("/dashboard");
+        }
         router.refresh();
       }
     } catch (error) {
