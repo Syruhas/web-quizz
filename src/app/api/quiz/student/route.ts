@@ -5,6 +5,10 @@ import clientPromise from "@/lib/db";
 import { ObjectId } from "mongodb";
 import { QuizSettings, Quiz } from '@/src/models/quiz';
 
+interface QuizFromGroup extends Quiz {
+  id?: string;
+}
+
 export async function GET() {
   try {
     // Récupérer la session utilisateur
@@ -37,11 +41,10 @@ export async function GET() {
     const groups = await db.collection("groups")
       .find({ _id: { $in: enrolledGroupIds } })
       .toArray();
-
-    console.log(groups)
       
     // Extraire tous les IDs de quiz de ces groupes
-    const quizIds = groups.flatMap(group => (group.quizzes || []).map((quiz: Quiz) => new ObjectId(quiz._id)));
+    const quizIds = groups.flatMap(group => (group.quizzes || []).map((quiz: QuizFromGroup) => new ObjectId(quiz.id)));
+      
     const quizzesSettings = groups.flatMap(group => (group.quizzes || []).map((quiz: {
         id:ObjectId;
         settings: QuizSettings
