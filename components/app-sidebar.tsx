@@ -16,8 +16,8 @@ import {
 } from "@/components/ui/sidebar";
 import { navigationItems, NavItem } from "@/config/navigation";
 import { toast } from "sonner";
-import { useState } from "react";
-import { LogOut, LogOutIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { LogOutIcon } from "lucide-react";
 
 export function AppSidebar() {
   const { data: session, status } = useSession();
@@ -38,7 +38,14 @@ export function AppSidebar() {
     }
   };
 
-  if (status === "loading") {
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/login");
+    }
+  }, [status, router]);
+
+
+  if (status === "loading" || status === "unauthenticated" || !session) {
     return (
       <Sidebar>
         <SidebarContent>
@@ -49,12 +56,6 @@ export function AppSidebar() {
       </Sidebar>
     );
   }
-
-  if (!session) {
-    router.push("/login");
-    return null;
-  }
-
 
   const userRole = session.user.role;
 
