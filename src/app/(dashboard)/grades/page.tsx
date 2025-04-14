@@ -11,7 +11,6 @@ export default async function GradesPage() {
 
     return (
     <div className="container mx-auto py-0 px-0">
-      <h1 className="text-2xl font-bold mb-6">Mes résultats</h1>
       <GradesDisplay />
     </div>
 );

@@ -112,7 +112,7 @@ export function AppSidebar() {
       <SidebarHeader>
         <div className="px-3 py-2">
           <h2 className="text-lg font-semibold">Web Quizz</h2>
-          <p className="text-sm">by Leo, Salomé, Quentin ft. Claude & GPT-4o</p>
+          <p className="text-sm">by Leo, Salomé, Quentin</p>
           <p
             className={`text-sm ${
               userRole === "teacher" ? "text-blue-500" : "text-green-500"
