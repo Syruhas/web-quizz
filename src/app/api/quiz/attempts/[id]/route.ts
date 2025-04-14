@@ -35,18 +35,18 @@ export async function GET(
 
     // Vérifier si l'utilisateur est autorisé à voir cette tentative
     // (soit c'est sa propre tentative, soit c'est le professeur qui a créé le quiz)
-    const isStudent = attempt.studentId.toString() === userId;
+    // const isStudent = attempt.studentId.toString() === userId;
     
-    if (!isStudent) {
-      // Récupérer le quiz pour vérifier si l'utilisateur est le propriétaire
-      const quiz = await db.collection("quiz").findOne({
-        _id: attempt.quizId
-      });
+    // if (!isStudent) {
+    //   // Récupérer le quiz pour vérifier si l'utilisateur est le propriétaire
+    //   const quiz = await db.collection("quiz").findOne({
+    //     _id: attempt.quizId
+    //   });
       
-      if (!quiz || quiz.ownerId.toString() !== userId) {
-        return NextResponse.json({ error: "Non autorisé à voir cette tentative" }, { status: 403 });
-      }
-    }
+    //   if (!quiz || quiz.ownerId.toString() !== userId) {
+    //     return NextResponse.json({ error: "Non autorisé à voir cette tentative" }, { status: 403 });
+    //   }
+    // }
     
     // Récupérer le quiz complet
     const quiz = await db.collection("quiz").findOne({
@@ -83,7 +83,7 @@ export async function GET(
     
     // Si c'est un étudiant qui consulte et que le quiz ne permet pas de voir les résultats détaillés,
     // ne pas renvoyer les options correctes
-    if (isStudent && !quiz.settings.showResults) {
+    if ( !quiz.settings.showResults) {
       // Supprimer les informations sur les réponses correctes
       quiz.questions = quiz.questions.map(question => {
         return {
